@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-jdbc="http://www.springframework.org/schema/integration/jdbc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/integration
+		https://www.springframework.org/schema/integration/spring-integration.xsd
+		http://www.springframework.org/schema/integration/jdbc
+			http://www.springframework.org/schema/integration/jdbc/spring-integration-jdbc.xsd">
+
+	<int-jdbc:inbound-channel-adapter id="dataChannel"
+		query="select * from articles where sent = 0" 
+		update="update articles set sent = 1 where id in (:id)"
+		data-source="dataSource" row-mapper="articleRowMapper">
+		<int:poller fixed-rate="10000">
+			<int:transactional />
+		</int:poller>
+	</int-jdbc:inbound-channel-adapter>
+
+	<int:service-activator input-channel="dataChannel" ref="jdbcMessageHandler" />
+	
+	<bean id="jdbcMessageHandler"
+		class="com.demo.service.JdbcMessageHandler" />
+
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<int:poller default="true" fixed-rate="10000" />
+
+	<int:channel id="dataChannel">
+		<int:queue />
+	</int:channel>
+
+
+	<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="url" value="jdbc:mysql://localhost:3306/test" />
+		<property name="username" value="demo" />
+		<property name="password" value="password" />
+	</bean>
+
+	<bean id="articleRowMapper"
+		class="com.demo.domain.ArticleRowMapper" />
+
+</beans>
