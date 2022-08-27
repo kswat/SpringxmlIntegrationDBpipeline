@@ -50,7 +50,7 @@ public final class Main {
 		final AbstractApplicationContext context =
 				new ClassPathXmlApplicationContext("classpath:META-INF/spring/integration/*-context.xml");
 
-		Thread.sleep(1000);
+		Thread.sleep(2000);
 		context.close();
 //		context.registerShutdownHook();
 

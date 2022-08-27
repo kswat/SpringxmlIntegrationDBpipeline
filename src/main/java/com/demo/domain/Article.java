@@ -7,6 +7,8 @@ public class Article {
     private String tags;
     private String category;
     private String author;
+    private int sent;
+    
 	public int getId() {
 		return id;
 	}
@@ -36,6 +38,12 @@ public class Article {
 	}
 	public void setAuthor(String author) {
 		this.author = author;
+	}
+	public int getSent() {
+		return sent;
+	}
+	public void setSent(int sent) {
+		this.sent = sent;
 	}
     
 }

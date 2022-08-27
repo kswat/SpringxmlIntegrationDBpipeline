@@ -3,12 +3,9 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:int="http://www.springframework.org/schema/integration"
 	xmlns:int-jdbc="http://www.springframework.org/schema/integration/jdbc"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans
-		https://www.springframework.org/schema/beans/spring-beans.xsd
-		http://www.springframework.org/schema/integration
-		https://www.springframework.org/schema/integration/spring-integration.xsd
-		http://www.springframework.org/schema/integration/jdbc
-			http://www.springframework.org/schema/integration/jdbc/spring-integration-jdbc.xsd">
+	xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/integration https://www.springframework.org/schema/integration/spring-integration.xsd
+		http://www.springframework.org/schema/integration/jdbc http://www.springframework.org/schema/integration/jdbc/spring-integration-jdbc.xsd">
 
 	<int-jdbc:inbound-channel-adapter id="dataChannel"
 		query="select * from articles where sent = 0" 
@@ -19,10 +16,11 @@
 		</int:poller>
 	</int-jdbc:inbound-channel-adapter>
 
+<!-- 
 	<int:service-activator input-channel="dataChannel" ref="jdbcMessageHandler" />
 	
-	<bean id="jdbcMessageHandler"
-		class="com.demo.service.JdbcMessageHandler" />
+	<bean id="jdbcMessageHandler" class="com.demo.service.JdbcMessageHandler" />
+-->
 
 	<bean id="transactionManager"
 		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
@@ -35,6 +33,19 @@
 		<int:queue />
 	</int:channel>
 
+<bean id="articleSplitterBean" class="com.demo.service.SplitterService"/>
+<int:splitter id="testSplitter" input-channel="dataChannel" ref="articleSplitterBean" output-channel="outChannel">
+</int:splitter>
+
+	<int:channel id="outChannel">
+		<int:queue />
+	</int:channel>
+<!--
+	<int:service-activator input-channel="outChannel" ref="splitMessageHandler" />
+	
+	<bean id="splitMessageHandler" class="com.demo.service.SplitMessageHandler" />
+
+-->
 
 	<bean id="dataSource"
 		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
@@ -44,7 +55,35 @@
 		<property name="password" value="password" />
 	</bean>
 
-	<bean id="articleRowMapper"
-		class="com.demo.domain.ArticleRowMapper" />
+	<bean id="articleRowMapper" class="com.demo.domain.ArticleRowMapper" />
+	
+	
+	
 
+	<int-jdbc:outbound-channel-adapter id="jdbcOutbound"
+	
+	                                       channel="outChannel"
+	                                       
+	                                       data-source="dataSource"
+	                                       sql-parameter-source-factory="sqlParameterSource"
+	                                       query="INSERT INTO articlescopy(ID, NAME, CATEGORY , TAGS , AUTHOR , sent ) VALUES(:id, :name, :category,:tags,:author,:sent)"
+	                                       
+	                                       />
+	    <bean id="sqlParameterSource"   class="org.springframework.integration.jdbc.ExpressionEvaluatingSqlParameterSourceFactory">
+	        <property name="parameterExpressions">
+	            <map>
+	                <entry key="id" value="payload.id"/>
+	                <entry key="name" value="payload.name"/>
+	                <entry key="category" value="payload.category"/>
+	                <entry key="tags" value="payload.tags"/>
+	                <entry key="author" value="payload.author"/>
+	                <entry key="sent" value="payload.sent"/>
+	            </map>
+	        </property>
+	    </bean>
+	    
+	    <!--
+	    <int:service-activator input-channel="dataChannel" ref="jdbcMessageHandler" >
+	     
+	    </int:service-activator> -->
 </beans>
