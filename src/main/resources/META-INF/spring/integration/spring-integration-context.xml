@@ -6,7 +6,7 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
 		http://www.springframework.org/schema/integration https://www.springframework.org/schema/integration/spring-integration.xsd
 		http://www.springframework.org/schema/integration/jdbc http://www.springframework.org/schema/integration/jdbc/spring-integration-jdbc.xsd">
-
+<!--
 	<int-jdbc:inbound-channel-adapter id="dataChannel"
 		query="select * from articles where sent = 0" 
 		update="update articles set sent = 1 where id in (:id)"
@@ -15,7 +15,7 @@
 			<int:transactional />
 		</int:poller>
 	</int-jdbc:inbound-channel-adapter>
-
+-->
 <!-- 
 	<int:service-activator input-channel="dataChannel" ref="jdbcMessageHandler" />
 	
@@ -86,4 +86,36 @@
 	    <int:service-activator input-channel="dataChannel" ref="jdbcMessageHandler" >
 	     
 	    </int:service-activator> -->
+	    
+
+	    
+	<int:channel id="testchannel"/>
+    <int:inbound-channel-adapter channel="testchannel" method="produce"  ref="producer">        
+        <int:poller fixed-rate="1000"/>
+    </int:inbound-channel-adapter>
+	<bean id="producer" class="com.demo.Producer"/>
+	
+	    <int-jdbc:outbound-channel-adapter id="jdbcOutbound"	
+	                                       channel="testchannel"	                                       
+	                                       data-source="dataSource"
+	                                       sql-parameter-source-factory="sqlParameterSource2"
+	                                       query="INSERT INTO articleslob(ID, NAME, CATEGORY , TAGS , AUTHOR , sent, msg ) VALUES(:id, :name, :category,:tags,:author,:sent,:msg)"
+	                                       
+	                                       />
+	    <bean id="sqlParameterSource2"   class="org.springframework.integration.jdbc.ExpressionEvaluatingSqlParameterSourceFactory">
+	        <property name="parameterExpressions">
+	            <map>
+	                <entry key="id" value="payload.id"/>
+	                <entry key="name" value="payload.name"/>
+	                <entry key="category" value="payload.category"/>
+	                <entry key="tags" value="payload.tags"/>
+	                <entry key="author" value="payload.author"/>
+	                <entry key="sent" value="payload.sent"/>
+	                <entry key="msg" value="payload.msg" />
+	            </map>
+	        </property>
+	    </bean>
+	    
+	    <!-- <entry key="msg" value="new org.springframework.jdbc.core.support.SqlLobValue(payload.msg)" /> -->
+	    
 </beans>

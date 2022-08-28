@@ -8,6 +8,7 @@ public class Article {
     private String category;
     private String author;
     private int sent;
+    private String msg;
     
 	public int getId() {
 		return id;
@@ -44,6 +45,12 @@ public class Article {
 	}
 	public void setSent(int sent) {
 		this.sent = sent;
+	}
+	public String getMsg() {
+		return msg;
+	}
+	public void setMsg(String msg) {
+		this.msg = msg;
 	}
     
 }

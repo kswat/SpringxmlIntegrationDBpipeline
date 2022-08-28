@@ -48,11 +48,11 @@ public final class Main {
 
 
 		final AbstractApplicationContext context =
-				new ClassPathXmlApplicationContext("classpath:META-INF/spring/integration/*-context.xml");
+				new ClassPathXmlApplicationContext("classpath:META-INF/spring/integration/*-pipeline.xml");
 
 		Thread.sleep(2000);
 		context.close();
-//		context.registerShutdownHook();
+//		context.registerShutdownHook();context
 
 	
 	}
